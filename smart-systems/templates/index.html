@@ -1,0 +1,178 @@
+<html>
+  <head>
+    <!-- Load TensorFlow.js -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@0.13.3"></script>
+    <!-- Load Posenet -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/posenet@0.2.3"></script>
+    <script src="static/camera.js"></script>
+
+    <style>
+
+#container {
+    position: absolute;
+
+    margin-left: 100px auto;
+    width: 512px;
+    height: 512px;
+    border: 10px #333 solid;
+    
+   
+}
+#videoElement {
+    position: absolute;
+    width: 512px;
+    height: 512px;
+    background-color: #fff;
+}
+#myCanvas{
+  position: absolute;
+
+}
+video {
+  -webkit-transform: scaleX(-1);
+  transform: scaleX(-1);
+}
+canvas {
+  -webkit-transform: scaleX(-1);
+  transform: scaleX(-1);
+}
+
+</style>
+
+ </head>
+
+  <body>
+    <button id="load" onclick="loadModel()">load model</button>
+    <button id="start" style="visibility:hidden">get pose</button>
+    <button id="stop" onclick="stopRecord()" style="visibility:hidden">stop</button>
+
+    <button class="tag" id="good" style="visibility:hidden" onclick="sendToFlask('api/test/',poses, 'good');setBack();">good</button>
+    <button class="tag" id="bad" style="visibility:hidden" onclick="sendToFlask('api/test/',poses, 'bad');setBack();">bad</button>
+    
+    <button onclick="clasifyEx('api/classify/squat/', poses);">infer that shit</button>
+    <p id="ref" style="visibility:hidden">posenet is loaded</p>
+    <p id="scores"></p>
+    <div id="container">
+    <video autoplay="true" id="videoElement">
+     
+    </video>
+    <canvas id="myCanvas" width="512" height="512"></canvas>
+    
+</div>
+
+  </body>
+  <!-- Place your code in the script tag below. You can also use an external .js file -->
+  <script>
+    var imageScaleFactor = 0.2;
+    var outputStride = 16;
+    var flipHorizontal = false;
+    var record =false;
+
+    var canvas = document.getElementById('myCanvas');
+    var imageElement = document.getElementById('cat');
+    var model;
+    let poses;
+    var choose = false;
+    
+ 
+    async function loadModel(){
+      model = await posenet.load();
+      console.log(model);
+      document.getElementById('ref').style.visibility = 'visible';
+      document.getElementById('start').style.visibility = 'visible';
+      document.getElementById('load').style.visibility = 'hidden';
+    };
+   
+
+    async function makeRecord(){
+      document.getElementById('stop').style.visibility = 'visible';
+      record = true;
+      poses = [];
+      console.log('test');
+      while (record){
+        
+        //console.log(video.srcObject);
+        imageElement = video;
+        const pose = await model.estimateSinglePose(imageElement, imageScaleFactor, flipHorizontal, outputStride);
+        //drawPose(pose);
+        drawJoint(pose.keypoints[0].position);
+        poses.push(pose); //.keypoints[0].position
+      };
+      document.getElementById('stop').style.visibility = 'hidden';
+      document.getElementById('good').style.visibility = 'visible';
+      document.getElementById('bad').style.visibility = 'visible';
+      choose = true;
+      var context = canvas.getContext('2d');
+      context.clearRect(0, 0, canvas.width, canvas.height);
+      
+      //
+    };
+    
+    function stopRecord(){
+
+      record = false;
+      console.log(poses);
+      
+    };
+
+
+    document.getElementById("start").addEventListener("click", function(event){
+    event.preventDefault();
+    makeRecord();
+});
+
+function drawPose(pose){
+  //var poseList = pose.keypoints;
+  var nose = pose.keypoints[0].position;
+  drawJoint(nose);
+  //for (var i = 0; i < poseList.length; i++) {
+    // Iterate over numeric indexes from 0 to 5, as everyone expects.
+    //console.log(poseList[i]);
+//}
+
+
+};
+
+function drawJoint(joint){
+      var context = canvas.getContext('2d');
+      context.clearRect(0, 0, canvas.width, canvas.height);
+      var centerX = joint.x;
+      var centerY = joint.y;
+      var radius = 5;
+      context.beginPath();
+      context.arc(centerX, centerY, radius, 0, 2 * Math.PI, false);
+      context.fillStyle = 'green';
+      context.fill();
+}
+
+function setBack(){
+  var x = document.getElementsByClassName("tag");
+  for(var i = 0; i < x.length; i++){
+    x[i].style.visibility = 'hidden';
+  }
+}
+  </script>
+
+  <script>
+
+const videoWidth = 512;
+const videoHeight = 512;
+
+ var video = document.querySelector("#videoElement");
+    video.width = videoWidth;
+    video.height = videoHeight;
+
+if (navigator.mediaDevices.getUserMedia) {       
+    navigator.mediaDevices.getUserMedia({video: true})
+  .then(function(stream) {
+    video.srcObject = stream;
+  })
+  .catch(function(err0r) {
+    console.log("Something went wrong!");
+  });
+}
+</script>
+
+
+
+</html>

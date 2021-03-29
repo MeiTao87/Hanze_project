@@ -1,0 +1,222 @@
+<link rel="stylesheet" type="text/css" href="../static/semantic.min.css">
+<script src="https://code.jquery.com/jquery-3.1.1.min.js" integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8="
+  crossorigin="anonymous"></script>
+<script src="../static/semantic.min.js"></script>
+    <!-- Load TensorFlow.js -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@0.13.3"></script>
+    <!-- Load Posenet -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/posenet@0.2.3"></script>
+<script src="static/camera.js"></script>
+
+
+<style>
+
+    #container {
+        width: auto;
+        height: 512px;
+       
+        
+       
+    }
+    #videoElement {
+        position: absolute;
+        width: 512px;
+        height: 512px;
+        background-color: #fff;
+        
+        left: calc(50% - 256px);
+    }
+    #myCanvas{
+      position: absolute;
+      left: calc(50% - 256px);
+    
+    }
+    video {
+      -webkit-transform: scaleX(-1);
+      transform: scaleX(-1);
+    }
+    canvas {
+      -webkit-transform: scaleX(-1);
+      transform: scaleX(-1);
+    }
+
+    .box3 {
+	box-shadow: 0 1px 5px rgba(0, 0, 0, 0.15);
+  padding: 0;
+}
+    
+    </style>
+
+
+
+<body>
+
+  <div class="ui secondary pointing menu">
+      <a href="{{ url_for('trainURL') }}" class="item active">
+          Record
+        </a>
+    
+    <div class="item right" id="ref"  style="visibility:hidden"> <i class="thumbs up outline green icon"></i>
+      <p>Posenet is loaded</p>
+    </div>
+    
+  </div>
+  <div class="ui segment padded basic">
+
+    <button id="load" class="ui button right floated Teal" onclick="loadModel()">Load posenet</button>
+                  <div class="ui two column very relaxed stackable grid">
+              
+
+<div class="left aligned column">
+    <h1 style="visibility:hidden">Select an exercise</h1>
+                    <button id="start" class="ui button" style="visibility:hidden">Get pose</button>
+      <button id="stop" class="ui button" onclick="stopRecord()" style="visibility:hidden">stop</button>
+      </div> 
+
+                  </div>
+
+
+
+<p></p>
+
+
+
+
+<div id="container">
+    <video autoplay="true" id="videoElement">
+     
+    </video>
+    <canvas id="myCanvas" width="512" height="512"></canvas>
+    
+</div>
+
+
+    <p class="padded grid"> </p>
+    <div class="ui center aligned padded grid">
+      <p> © Smart Systems - Hanzehogeschool </p>
+    </div>
+  </div>
+</body>
+
+
+
+<script>$('.ui.dropdown')
+    .dropdown()
+    ;</script>
+
+
+<script>
+  var imageScaleFactor = 0.9;
+  var outputStride = 16;
+  var flipHorizontal = false;
+  var record =false;
+
+  var canvas = document.getElementById('myCanvas');
+  var imageElement;
+  var model;
+  let poses;
+  var choose = false;
+  
+
+  async function loadModel(){
+    model = await posenet.load();
+    console.log(model);
+    document.getElementById('ref').style.visibility = 'visible';
+    document.getElementById('start').style.visibility = 'visible';
+    document.getElementById('load').style.visibility = 'hidden';
+  };
+ 
+
+  async function makeRecord(){
+    document.getElementById('stop').style.visibility = 'visible';
+    record = true;
+    poses = [];
+    console.log('test');
+    while (record){
+      
+      //console.log(video.srcObject);
+      imageElement = video;
+      const pose = await model.estimateSinglePose(imageElement, imageScaleFactor, flipHorizontal, outputStride);
+      drawPose(pose);
+      //drawJoint(pose.keypoints[0].position);
+      poses.push(pose); //.keypoints[0].position
+    };
+    document.getElementById('stop').style.visibility = 'hidden';
+    choose = true;
+    var context = canvas.getContext('2d');
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    
+    //
+  };
+  
+  function stopRecord(){
+    var context = canvas.getContext('2d');
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    record = false;
+    console.log(poses);
+    sendToFlask('api/test/',poses);
+    setBack();
+    
+  };
+
+
+  document.getElementById("start").addEventListener("click", function(event){
+  event.preventDefault();
+  makeRecord();
+});
+
+function drawPose(pose){
+//var poseList = pose.keypoints;
+//console.log(pose.keypoints[i].position);
+var context = canvas.getContext('2d');
+//console.log(context);
+context.clearRect(0, 0, canvas.width, canvas.height);
+for (var i = 0; i < pose.keypoints.length; i++){
+  //drawJoint(pose.keypoints[i].position, context);
+  //if (pose.keypoints[i].score > 0.9){
+    //console.log(context);
+  drawJoint(pose.keypoints[i].position, context);
+  //}
+  //drawJoint(pose.keypoints[i].position);
+}
+
+    
+};
+
+function drawJoint(joint, context){
+    var centerX = joint.x;
+    var centerY = joint.y;
+    var radius = 5;
+    context.beginPath();
+    context.arc(centerX, centerY, radius, 0, 2 * Math.PI, false);
+    context.fillStyle = 'red';
+    context.fill();
+}
+
+function setBack(){
+var x = document.getElementsByClassName("tag");
+for(var i = 0; i < x.length; i++){
+  x[i].style.visibility = 'hidden';
+}
+}
+</script>
+
+<script>
+
+const videoWidth = 512;
+const videoHeight = 512;
+
+var video = document.querySelector("#videoElement");
+  video.width = videoWidth;
+  video.height = videoHeight;
+
+if (navigator.mediaDevices.getUserMedia) {       
+  navigator.mediaDevices.getUserMedia({video: true})
+.then(function(stream) {
+  video.srcObject = stream;
+})
+.catch(function(err0r) {
+  console.log("Something went wrong!");
+});
+}
+</script>

@@ -1,0 +1,143 @@
+<link rel="stylesheet" type="text/css" href="static/semantic.min.css">
+<script src="https://code.jquery.com/jquery-3.1.1.min.js" integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8="
+  crossorigin="anonymous"></script>
+<script src="static/semantic.min.js"></script>
+<script src="static/camera.js"></script>
+
+<body>
+
+  <div class="ui secondary pointing menu">
+    <a href="{{ url_for('trainURL') }}" class="item">
+      Train
+    </a>
+    <a href="{{ url_for('classifyURL') }}" class="item">
+      Classify
+    </a>
+    <a href="{{ url_for('dashboardURL') }}" class="item active">
+      Dashboard
+    </a>
+    <div class="item right" id="ref"  style="visibility:hidden"> <i class="thumbs up outline green icon"></i>
+      <p>Posenet is loaded</p>
+    </div>
+  </div>
+  <div class="ui segment padded basic">
+
+    <p></p>
+
+
+    <div class="ui very padded text container segment">
+      
+      {% for value in dict_item %}
+
+
+          <table class="ui table center aligned">
+              
+            
+                  <div class="ui two column very relaxed stackable grid">
+                    <div class="middle aligned column">
+                      <h1>{{ value }}</h1>
+                    </div>
+                    <div class="right aligned column">
+                        <button class="ui circular icon button">
+                            <i class="close circle large icon"></i>
+                        </button>
+                    </div>
+                  </div>
+                
+              
+
+              <thead class="full-width">
+                <tr>
+                  <th></th>
+                  <th>Class</th>
+                  <th>In training</th>
+                  <th>In classification</th>
+                </tr>
+              </thead>
+              <tbody>
+   
+                <tr>
+                  <td><div class="ui fitted slider checkbox">
+                      <input type="checkbox"> <label></label>
+                    </div></td>
+                  <td>Good</td>
+                  <td><button class="ui circular icon button">
+                      <i class="close red icon"></i>
+                    </button></td>
+                  <td>
+                      <button class="ui circular icon button">
+                          <i class="check green icon"></i>
+                        </button>
+                    </td>
+                </tr>
+                <tr>
+                  <td><div class="ui fitted slider checkbox">
+                      <input type="checkbox"> <label></label>
+                    </div></td>
+                  <td>Bad</td>
+                  <td> <button class="ui circular icon button">
+                      <i class="check green icon"></i>
+                    </button></td>
+                  <td> <button class="ui circular icon button">
+                      <i class="check green icon"></i>
+                    </button></td>
+                </tr>
+              </tbody>
+              <tfoot >
+                <tr>
+                  <th><div class="ui small  button">
+                      Remove
+                    </div></th>
+                <th><div class="ui right floated small teal labeled icon button ">
+                    <i class="tags icon"></i> Add
+                  </div></th>
+                  <th><div class="ui small teal button " onclick="trainModels('{{ value }}');">
+                      Train
+                    </div></th>
+                <th>   </th>
+              </tr></tfoot>
+            </table>
+
+        {% endfor %}
+
+
+
+          <div class="ui right floated small teal labeled icon button " onclick="createEx();">
+              <i class="child icon"></i> Add exercise
+            </div>
+
+
+            <div class="ui form" id="myForm" style="display:none;">
+                <div class="field">
+                  <label>Exercise Name</label>
+                  <input id="newEx" type="text" name="Name" placeholder="Name">
+                </div>
+        
+                <button class="ui button" onclick="hideIT(); makeEx();">Submit</button>
+              </div>
+
+    </div>
+
+
+
+
+
+
+
+
+
+
+    <p class="padded grid"> </p>
+    <div class="ui center aligned padded grid">
+      <p> © Polinator Group </p>
+    </div>
+  </div>
+</body>
+
+
+
+<script>$('.ui.dropdown')
+    .dropdown()
+    ;</script>
+
+
